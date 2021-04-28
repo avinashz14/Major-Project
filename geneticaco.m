@@ -1,5 +1,4 @@
-%AUTHORED BY team 28 during internship at bennett university greater noida
-%india on 17 june 2020
+
 close all
 clear all
 clc
