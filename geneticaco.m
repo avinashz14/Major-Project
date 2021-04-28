@@ -21,8 +21,6 @@ Eo=0.5;
 ETX=50*0.000000001;
 ERX=50*0.000000001;
 %Transmit Amplifier types 
-Efs=10*0.000000000001;
-Emp=0.0013*0.000000000001;
 %Data Aggregation Energy
 EDA=5*0.000000001;
 %Values for Hetereogeneity 
@@ -33,18 +31,18 @@ a=1;
 %maximum number of rounds
 rmax=1;
 %%%%%%%%%%%%%%%%%%%%%%%%% END OF PARAMETERS %%%%%%%%%%%%%%%%%%%%%%%%
-%Computation of do/ 
-do=sqrt(Efs/Emp);
+%Computation of DOB/ 
 
 format long
 tic
-rng shuffle
+%rng('shuffle')
+rand 
 alpha=4;
 beta=2;
 gama=2;
 delta=4;
 Elec=50*0.000000001; % Eelec = 50nJ/bit energy tranfer and receive
-Efs= 10*0.000000000001 ;% energy free space
+Efs= 0.00000000001 ;% energy free space
 Emp= 0.0013*0.000000000001; %energy multi path
 Kbit = 2000; % size
 CH_Kbit = 200;  % Adv. tisement msg is 25 byte long i.e. 200 bits
@@ -73,7 +71,7 @@ dpermon=0;
 roo=0.02;
 Rrout=0;
 Rounds=0;
-d0 = sqrt(Efs/Emp);
+d0 = 87.70;
 actual_rounds=0;
 %%%%%%%%%%%%%%%%%%%%%%%%%%delay%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 lamda=3;
@@ -82,6 +80,9 @@ chi=40;%bps
 gamma=50;%m/s
 queuing_delay=(1/(lamda-mu));
 transmission_delay=Kbit/chi;
+
+A = imread('op1.png');
+imshow(A)
 %Creation of the random Sensor Network
 figure(1);
 for i=1:1:n
@@ -111,6 +112,8 @@ for i=1:1:n
         hold on;
     end
 end
+
+
 S(n+1).xd=sink.x;
 S(n+1).yd=sink.y;
 S(n+1).zd = sink.z;
@@ -131,8 +134,6 @@ rcountCHs=rcountCHs+countCHs;
 flag_first_dead=0;
 
 for r=0:1:rmax
-    
-
   %Operation for epoch
   if(mod(r, round(1/p) )==0)
     for i=1:1:n
@@ -140,6 +141,7 @@ for r=0:1:rmax
         S(i).cl=0;
     end
   end
+end
 
 hold off;
 
@@ -204,44 +206,45 @@ countCHs=0;
 cluster=1;
 clusterinfo(1:n)=0;
 for i=1:1:n
-   if(S(i).E>0)
-   temp_rand=rand;     
-   if ( (S(i).G)<=0)
-
- %Election of Cluster Heads
- if(temp_rand<= (p/(1-p*mod(r,round(1/p)))))
-            countCHs=countCHs+1;
-            packets_TO_BS=packets_TO_BS+1;
-            PACKETS_TO_BS(r+1)=packets_TO_BS;
-            clusterinfo(1,i)=1;
-            S(i).type='C';
-            S(i).G=round(1/p)-1;
-            C(cluster).xd=S(i).xd;
-            C(cluster).yd=S(i).yd;
-            C(cluster).zd=S(i).zd;
+    if (S(i).E>0)
+        temp_rand=rand;
+        
+        if ( (S(i).G)<=0)
             
-            plot3(S(i).xd,S(i).yd,S(i).zd,'k*');
-            
-            distance=sqrt( (S(i).xd-(S(n+1).xd) )^2 + (S(i).yd-(S(n+1).yd) )^2 + (S(i).zd-(S(n+1).zd) )^2);
-            C(cluster).distance=distance;
-            C(cluster).id=i;
-            X(cluster)=S(i).xd;
-            Y(cluster)=S(i).yd;
-            Z(cluster)=S(i).zd;
-            cluster=cluster+1;
-            
-            %Calculation of Energy dissipated
-            distance;
-            if (distance>do)
-                S(i).E=S(i).E- ( (ETX+EDA)*(4000) + Emp*4000*( distance*distance*distance*distance )); 
-            end
-            if (distance<=do)
-                S(i).E=S(i).E- ( (ETX+EDA)*(4000)  + Efs*4000*( distance * distance )); 
-            end
-        end     
-    
-    end
-  end 
+            %Election of Cluster Heads
+            if (temp_rand<= (p/(1-p*mod(r,round(1/p)))))
+                                    
+                countCHs=countCHs+1;
+                packets_TO_BS=packets_TO_BS+1;
+                PACKETS_TO_BS(r+1)=packets_TO_BS;
+                clusterinfo(1,i)=1;
+                S(i).type='C';
+                S(i).G=round(1/p)-1;
+                C(cluster).xd=S(i).xd;
+                C(cluster).yd=S(i).yd;
+                C(cluster).zd=S(i).zd;
+                
+                plot3(S(i).xd,S(i).yd,S(i).zd,'k*');
+                
+                distance=sqrt( (S(i).xd-(S(n+1).xd) )^2 + (S(i).yd-(S(n+1).yd) )^2 + (S(i).zd-(S(n+1).zd) )^2);
+                C(cluster).distance=distance;
+                C(cluster).id=i;
+                X(cluster)=S(i).xd;
+                Y(cluster)=S(i).yd;
+                Z(cluster)=S(i).zd;
+                cluster=cluster+1;
+                
+                %Calculation of Energy dissipated
+                %distance;
+                if (distance <= DOB)
+                    S(i).E=S(i).E- ( (ETX+EDA)*(4000)  + Efs*4000*( distance * distance ));
+                else
+                    S(i).E=S(i).E - ((ETX+EDA)*(4000) + Emp*4000*(distance*distance*distance*distance));
+                end
+            end     
+        
+        end
+    end 
 end
 
 STATISTICS(r+1).CLUSTERHEADS=cluster-1;
@@ -262,13 +265,13 @@ for i=1:1:n
        end
        
        %Energy dissipated by associated Cluster Head 
-            min_dis;
-            if (min_dis>do)
-                S(i).E=S(i).E- ( ETX*(4000) + Emp*4000*( min_dis * min_dis * min_dis * min_dis)); 
-            end
-            if (min_dis<=do)
-                S(i).E=S(i).E- ( ETX*(4000) + Efs*4000*( min_dis * min_dis)); 
-            end
+        min_dis;
+        if (min_dis>DOB)
+            S(i).E=S(i).E- ( ETX*(4000) + Emp*4000*( min_dis * min_dis * min_dis * min_dis)); 
+        end
+        if (min_dis<=DOB)
+            S(i).E=S(i).E- ( ETX*(4000) + Efs*4000*( min_dis * min_dis)); 
+        end
         %Energy dissipated
         if(min_dis>0)
           S(C(min_dis_cluster).id).E = S(C(min_dis_cluster).id).E- ( (ERX + EDA)*4000 ); 
@@ -285,7 +288,7 @@ hold on;
 
 countCHs;
 rcountCHs=rcountCHs+countCHs;
-end
+
 clusterinfo(1,101) = 1;
 
 for i = 1:n+1
